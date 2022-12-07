@@ -1,15 +1,47 @@
 version: '3.1'
 services:
-  stats-server:
-    ports:
-      - "9090:9090"
-
-  stats-db:
-    image: postgres:14-alpine
-
   ewm-service:
+    build: ewm-service
+    container_name: ewm-service-cont1
     ports:
       - "8080:8080"
+    depends_on:
+      - db
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/newevents
+      - POSTGRES_USER=eventmanager
+      - POSTGRES_PASSWORD=world
+      - STATSSERVER-URL=http://statsserver:9090
 
-  ewm-db:
-    image: postgres:14-alpine
+  db:
+    image: postgres:13.7
+    container_name: newevents-cont1
+    ports:
+      - "6541:5432"
+    environment:
+      - POSTGRES_DB=newevents
+      - POSTGRES_USER=eventmanager
+      - POSTGRES_PASSWORD=world
+
+  statsserver:
+    build: statsserver
+    container_name: statsserver-cont1
+    ports:
+      - "9090:9090"
+    depends_on:
+      - db_stat
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db_stat:5432/stats_db
+      - POSTGRES_DB=stats_db
+      - POSTGRES_USER=eventmanager
+      - POSTGRES_PASSWORD=world
+
+  db_stat:
+    image: postgres:13.7
+    container_name: stats_db-cont1
+    ports:
+      - "6542:5432"
+    environment:
+      - POSTGRES_DB=stats_db
+      - POSTGRES_USER=eventmanager
+      - POSTGRES_PASSWORD=world
