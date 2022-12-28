@@ -2,14 +2,17 @@ package yandex.praktikum.ewmservice.services.privateuser;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import yandex.praktikum.ewmservice.client.StatsWebClient;
 import yandex.praktikum.ewmservice.entities.*;
 import yandex.praktikum.ewmservice.entities.dto.event.EventFullDto;
 import yandex.praktikum.ewmservice.entities.dto.event.EventShortDto;
 import yandex.praktikum.ewmservice.entities.dto.event.NewEventDto;
 import yandex.praktikum.ewmservice.entities.dto.event.UpdateEventRequest;
+import yandex.praktikum.ewmservice.entities.dto.statistics.EndpointHitDto;
 import yandex.praktikum.ewmservice.entities.mappers.EventsMapper;
 import yandex.praktikum.ewmservice.exceptions.*;
 import yandex.praktikum.ewmservice.repositories.CategoriesRepository;
@@ -17,6 +20,7 @@ import yandex.praktikum.ewmservice.repositories.EventsRepository;
 import yandex.praktikum.ewmservice.repositories.RequestsRepository;
 import yandex.praktikum.ewmservice.repositories.UsersRepository;
 
+import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
@@ -32,9 +36,12 @@ public class PrivateEventsService {
     private final UsersRepository usersRepository;
     private final CategoriesRepository categoriesRepository;
     private final RequestsRepository requestsRepository;
+    private final StatsWebClient statsWebClient;
     private final PrivateRequestsService privateRequestsService;
-    public static final int NEW_EVENT_NOT_EARLIER_LIMIT = 2;
-    public static final int NUMBER_OF_CONFIRMED_REQUESTS_IN_NEW_EVENT = 0;
+    @Value("${spring.application.name}")
+    private String appName;
+    public static final long NEW_EVENT_NOT_EARLIER_LIMIT = 2L;
+    public static final long NUMBER_OF_CONFIRMED_REQUESTS_IN_NEW_EVENT = 0L;
 
     @Transactional
     public EventFullDto create(Long userId, NewEventDto newEventDto) {
@@ -113,20 +120,33 @@ public class PrivateEventsService {
                 eventFound.getId()));
     }
 
-    public List<EventShortDto> getAllOfUser(Long userId, Integer from, Integer size) {
+    public List<EventShortDto> getAllOfUser(Long userId, Integer from, Integer size,
+                                            HttpServletRequest httpServletRequest) {
         log.info("Получаем все события пользователя #{}", userId);
+        statsWebClient.addHit(new EndpointHitDto(
+                appName,
+                httpServletRequest.getRequestURI(),
+                httpServletRequest.getRemoteAddr(),
+                LocalDateTime.now()
+        ));
         List<Event> events = eventsRepository.findEventsByInitiator_Id(userId, PageRequest.of(from, size));
         List<ParticipationRequest> allRequestsOfEvents = requestsRepository.findParticipationRequestsByEventIn(events);
         return events.stream()
-                .map((e) -> EventsMapper.eventToShortDto(e, Math.toIntExact(allRequestsOfEvents
+                .map((e) -> EventsMapper.eventToShortDto(e, allRequestsOfEvents
                         .stream()
                         .filter(p -> p.getEvent().equals(e))
-                        .count())))
+                        .count()))
                 .collect(Collectors.toList());
     }
 
-    public EventFullDto getById(Long userId, Long eventId) {
+    public EventFullDto getById(Long userId, Long eventId, HttpServletRequest httpServletRequest) {
         log.info("Получаем событие #{} пользователя #{}", eventId, userId);
+        statsWebClient.addHit(new EndpointHitDto(
+                appName,
+                httpServletRequest.getRequestURI(),
+                httpServletRequest.getRemoteAddr(),
+                LocalDateTime.now()
+        ));
         Event event = eventsRepository.findById(eventId).orElseThrow(() -> new EventNotFoundException(eventId));
         if (!Objects.equals(event.getInitiator().getId(), userId)) {
             throw new WrongUserException();

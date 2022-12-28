@@ -2,6 +2,7 @@ package yandex.praktikum.ewmservice.services.admin;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import yandex.praktikum.ewmservice.entities.dto.user.NewUserRequestDto;
@@ -36,17 +37,20 @@ public class AdminUsersService {
         log.info("Пользователь {} успешно удален", userId);
     }
 
-    public List<UserDto> getAll(List<Long> ids, long from, long size) {
+    public List<UserDto> getAll(List<Long> ids, int from, int size) {
         if (ids.isEmpty()) {
             log.info("Получаем всех пользователей, начиная с #{}", from);
+            return usersRepository.findAll(PageRequest.of(from, size))
+                    .stream()
+                    .map(UserMapper::userToDto)
+                    .collect(Collectors.toList());
         } else {
             log.info("Получаем пользователей #{}", ids);
+            return usersRepository.findUsersByIdIn(ids)
+                    .stream()
+                    .map(UserMapper::userToDto)
+                    .collect(Collectors.toList());
         }
-        return usersRepository.findUsersByIdIn(ids)
-                .stream()
-                .skip(from)
-                .limit(size)
-                .map(UserMapper::userToDto)
-                .collect(Collectors.toList());
     }
+
 }

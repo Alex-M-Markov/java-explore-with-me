@@ -19,6 +19,7 @@ import yandex.praktikum.ewmservice.repositories.EventsRepository;
 import yandex.praktikum.ewmservice.repositories.RequestsRepository;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -39,11 +40,10 @@ public class AdminCompilationsService {
         log.info("Новая подборка {} добавлена", compilation.getId());
         List<ParticipationRequest> allRequestsOfEvents = requestsRepository.findParticipationRequestsByEventIn(
                 eventsList);
+        Map<Event, Long> collect = allRequestsOfEvents.stream()
+                .collect(Collectors.groupingBy(ParticipationRequest::getEvent, Collectors.counting()));
         List<EventShortDto> eventShortDtos = compilation.getEvents().stream()
-                .map((e) -> EventsMapper.eventToShortDto(e, Math.toIntExact(allRequestsOfEvents
-                        .stream()
-                        .filter(p -> p.getEvent().equals(e))
-                        .count())))
+                .map(e -> EventsMapper.eventToShortDto(e, collect.get(e)))
                 .collect(Collectors.toList());
         return CompilationMapper.compilationToDto(compilation, eventShortDtos);
     }

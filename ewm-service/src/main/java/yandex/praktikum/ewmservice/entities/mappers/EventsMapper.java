@@ -46,7 +46,7 @@ public class EventsMapper {
                 ;
     }
 
-    public static EventFullDto eventToFullDto(Event event, Integer confirmedRequests) {
+    public static EventFullDto eventToFullDto(Event event, Long confirmedRequests) {
         return new EventFullDto(
                 event.getId(),
                 event.getTitle(),
@@ -67,7 +67,7 @@ public class EventsMapper {
         );
     }
 
-    public static EventShortDto eventToShortDto(Event event, Integer confirmedRequests) {
+    public static EventShortDto eventToShortDto(Event event, Long confirmedRequests) {
         return new EventShortDto(
                 event.getId(),
                 event.getTitle(),

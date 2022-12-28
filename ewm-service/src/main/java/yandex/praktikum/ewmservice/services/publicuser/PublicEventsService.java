@@ -43,7 +43,6 @@ public class PublicEventsService {
                                    LocalDateTime rangeStart, LocalDateTime rangeEnd, Boolean onlyAvailable,
                                    SortOptions sort, Integer from, Integer size,
                                    HttpServletRequest httpServletRequest) {
-
         statsWebClient.addHit(new EndpointHitDto(
                 appName,
                 httpServletRequest.getRequestURI(),
@@ -54,24 +53,23 @@ public class PublicEventsService {
                 onlyAvailable, sort, from, size);
         List<ParticipationRequest> allRequestsOfEvents = requestsRepository.findParticipationRequestsByEventIn(events);
         return events.stream()
-                .map((e) -> EventsMapper.eventToShortDto(e, Math.toIntExact(allRequestsOfEvents
+                .map((e) -> EventsMapper.eventToShortDto(e, allRequestsOfEvents
                         .stream()
                         .filter(p -> p.getEvent().equals(e))
-                        .count())))
+                        .count()))
                 .collect(Collectors.toList());
     }
 
     public EventFullDto getByIdAndState(Long eventId, HttpServletRequest httpServletRequest) {
         log.info("Получаем событие #{}", eventId);
-        Event event = eventsRepository.findByIdAndState(eventId, State.PUBLISHED)
-                .orElseThrow(() -> new EventNotFoundException(eventId));
-
         statsWebClient.addHit(new EndpointHitDto(
                 appName,
                 httpServletRequest.getRequestURI(),
                 httpServletRequest.getRemoteAddr(),
                 LocalDateTime.now()
         ));
+        Event event = eventsRepository.findByIdAndState(eventId, State.PUBLISHED)
+                .orElseThrow(() -> new EventNotFoundException(eventId));
         return EventsMapper.eventToFullDto(event, privateRequestsService.countConfirmedRequests(eventId));
     }
 

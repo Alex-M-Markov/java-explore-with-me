@@ -9,6 +9,7 @@ import yandex.praktikum.ewmservice.entities.dto.event.NewEventDto;
 import yandex.praktikum.ewmservice.entities.dto.event.UpdateEventRequest;
 import yandex.praktikum.ewmservice.services.privateuser.PrivateEventsService;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import javax.validation.constraints.Positive;
 import javax.validation.constraints.PositiveOrZero;
@@ -40,15 +41,17 @@ public class PrivateEventsController {
     public List<EventShortDto> getAll(
             @PathVariable long userId,
             @PositiveOrZero @RequestParam(name = "from", defaultValue = "0") int from,
-            @Positive @RequestParam(name = "size", defaultValue = "10") int size) {
-        return privateEventsService.getAllOfUser(userId, from, size);
+            @Positive @RequestParam(name = "size", defaultValue = "10") int size,
+            HttpServletRequest httpServletRequest) {
+        return privateEventsService.getAllOfUser(userId, from, size, httpServletRequest);
     }
 
     @GetMapping("/{userId}/events/{eventId}")
     public EventFullDto getById(
             @PathVariable long userId,
-            @PathVariable long eventId) {
-        return privateEventsService.getById(userId, eventId);
+            @PathVariable long eventId,
+            HttpServletRequest httpServletRequest) {
+        return privateEventsService.getById(userId, eventId, httpServletRequest);
     }
 
 }

@@ -9,6 +9,7 @@ import yandex.praktikum.ewmservice.entities.dto.event.AdminUpdateEventRequest;
 import yandex.praktikum.ewmservice.entities.dto.event.EventFullDto;
 import yandex.praktikum.ewmservice.services.admin.AdminEventsService;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.validation.constraints.Positive;
 import javax.validation.constraints.PositiveOrZero;
 import java.time.LocalDateTime;
@@ -31,9 +32,10 @@ public class AdminEventsController {
             @RequestParam(name = "rangeEnd", required = false)
             @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime rangeEnd,
             @PositiveOrZero @RequestParam(name = "from", defaultValue = "0") int from,
-            @Positive @RequestParam(name = "size", defaultValue = "10") int size
+            @Positive @RequestParam(name = "size", defaultValue = "10") int size,
+            HttpServletRequest httpServletRequest
     ) {
-        return adminEventsService.find(users, states, categories, rangeStart, rangeEnd, from, size);
+        return adminEventsService.find(users, states, categories, rangeStart, rangeEnd, from, size, httpServletRequest);
     }
 
     @PutMapping("/{eventId}")

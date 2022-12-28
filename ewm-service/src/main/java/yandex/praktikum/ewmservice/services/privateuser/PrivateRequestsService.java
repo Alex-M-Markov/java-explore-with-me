@@ -78,9 +78,8 @@ public class PrivateRequestsService {
     }
 
     public List<ParticipationRequestDto> getForUserEvent(Long userId, Long eventId) {
-        return requestsRepository.findAllByEvent_Id(eventId)
+        return requestsRepository.findAllByEvent_Initiator_IdAndEvent_Id(userId, eventId)
                 .stream()
-                .filter((e) -> (e.getEvent().getInitiator().getId().equals(userId)))
                 .map(RequestMapper::requestToDto)
                 .collect(Collectors.toList());
     }
@@ -121,10 +120,10 @@ public class PrivateRequestsService {
     }
 
     @Transactional
-    public Integer countConfirmedRequests(Long eventId) {
+    public long countConfirmedRequests(Long eventId) {
         List<ParticipationRequest> requests = requestsRepository.findAllByEvent_Id(eventId);
         if (requests == null) {
-            return 0;
+            return 0L;
         } else {
             return requests.size();
         }

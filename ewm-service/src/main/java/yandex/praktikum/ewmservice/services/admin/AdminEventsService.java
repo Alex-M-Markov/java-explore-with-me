@@ -2,13 +2,16 @@ package yandex.praktikum.ewmservice.services.admin;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import yandex.praktikum.ewmservice.client.StatsWebClient;
 import yandex.praktikum.ewmservice.entities.Event;
 import yandex.praktikum.ewmservice.entities.ParticipationRequest;
 import yandex.praktikum.ewmservice.entities.State;
 import yandex.praktikum.ewmservice.entities.dto.event.AdminUpdateEventRequest;
 import yandex.praktikum.ewmservice.entities.dto.event.EventFullDto;
+import yandex.praktikum.ewmservice.entities.dto.statistics.EndpointHitDto;
 import yandex.praktikum.ewmservice.entities.mappers.EventsMapper;
 import yandex.praktikum.ewmservice.exceptions.*;
 import yandex.praktikum.ewmservice.repositories.CategoriesRepository;
@@ -16,8 +19,10 @@ import yandex.praktikum.ewmservice.repositories.EventsRepository;
 import yandex.praktikum.ewmservice.repositories.RequestsRepository;
 import yandex.praktikum.ewmservice.services.privateuser.PrivateRequestsService;
 
+import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -29,7 +34,10 @@ public class AdminEventsService {
     private final EventsRepository eventsRepository;
     private final CategoriesRepository categoriesRepository;
     private final RequestsRepository requestsRepository;
+    private final StatsWebClient statsWebClient;
     private final PrivateRequestsService privateRequestsService;
+    @Value("${spring.application.name}")
+    private String appName;
 
     @Transactional
     public EventFullDto update(Long eventId, AdminUpdateEventRequest adminUpdateEventRequest) {
@@ -72,16 +80,21 @@ public class AdminEventsService {
 
     public List<EventFullDto> find(List<Long> users, List<State> states, List<Long> categories,
                                    LocalDateTime rangeStart, LocalDateTime rangeEnd,
-                                   Integer from, Integer size) {
+                                   Integer from, Integer size, HttpServletRequest httpServletRequest) {
         log.info("Выгружаем события по запросу");
+        statsWebClient.addHit(new EndpointHitDto(
+                appName,
+                httpServletRequest.getRequestURI(),
+                httpServletRequest.getRemoteAddr(),
+                LocalDateTime.now()
+        ));
         List<Event> events = eventsRepository.getEventsAdmin(users, states, categories, rangeStart, rangeEnd, from,
                 size);
         List<ParticipationRequest> allRequestsOfEvents = requestsRepository.findParticipationRequestsByEventIn(events);
+        Map<Event, Long> collect = allRequestsOfEvents.stream()
+                .collect(Collectors.groupingBy(ParticipationRequest::getEvent, Collectors.counting()));
         return events.stream()
-                .map((e) -> EventsMapper.eventToFullDto(e, Math.toIntExact(allRequestsOfEvents
-                        .stream()
-                        .filter(p -> p.getEvent().equals(e))
-                        .count())))
+                .map((e) -> EventsMapper.eventToFullDto(e, collect.get(e)))
                 .collect(Collectors.toList());
     }
 
