@@ -38,7 +38,7 @@ public class AdminUsersService {
     }
 
     public List<UserDto> getAll(List<Long> ids, int from, int size) {
-        if (ids.isEmpty()) {
+        if (ids == null || ids.isEmpty()) {
             log.info("Получаем всех пользователей, начиная с #{}", from);
             return usersRepository.findAll(PageRequest.of(from, size))
                     .stream()

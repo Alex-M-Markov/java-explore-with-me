@@ -3,7 +3,6 @@ package yandex.praktikum.ewmservice.services.publicuser;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import yandex.praktikum.ewmservice.client.StatsWebClient;
@@ -23,6 +22,7 @@ import yandex.praktikum.ewmservice.services.privateuser.PrivateRequestsService;
 import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 
@@ -36,15 +36,13 @@ public class PublicEventsService {
     private final RequestsRepository requestsRepository;
     private final StatsWebClient statsWebClient;
     private final PrivateRequestsService privateRequestsService;
-    @Value("${spring.application.name}")
-    private String appName;
 
     public List<EventShortDto> get(String annotation, List<Long> categories, Boolean paid,
                                    LocalDateTime rangeStart, LocalDateTime rangeEnd, Boolean onlyAvailable,
                                    SortOptions sort, Integer from, Integer size,
                                    HttpServletRequest httpServletRequest) {
         statsWebClient.addHit(new EndpointHitDto(
-                appName,
+                null,
                 httpServletRequest.getRequestURI(),
                 httpServletRequest.getRemoteAddr(),
                 LocalDateTime.now()
@@ -52,18 +50,17 @@ public class PublicEventsService {
         List<Event> events = eventsRepository.getEventsPublic(annotation, categories, paid, rangeStart, rangeEnd,
                 onlyAvailable, sort, from, size);
         List<ParticipationRequest> allRequestsOfEvents = requestsRepository.findParticipationRequestsByEventIn(events);
+        Map<Event, Long> collect = allRequestsOfEvents.stream()
+                .collect(Collectors.groupingBy(ParticipationRequest::getEvent, Collectors.counting()));
         return events.stream()
-                .map((e) -> EventsMapper.eventToShortDto(e, allRequestsOfEvents
-                        .stream()
-                        .filter(p -> p.getEvent().equals(e))
-                        .count()))
+                .map(e -> EventsMapper.eventToShortDto(e, collect.get(e)))
                 .collect(Collectors.toList());
     }
 
     public EventFullDto getByIdAndState(Long eventId, HttpServletRequest httpServletRequest) {
         log.info("Получаем событие #{}", eventId);
         statsWebClient.addHit(new EndpointHitDto(
-                appName,
+                null,
                 httpServletRequest.getRequestURI(),
                 httpServletRequest.getRemoteAddr(),
                 LocalDateTime.now()

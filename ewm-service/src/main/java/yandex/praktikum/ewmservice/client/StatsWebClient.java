@@ -16,6 +16,9 @@ import java.util.List;
 public class StatsWebClient {
     @Value("${STATSSERVER-URL}")
     private String serverUrl;
+
+    @Value("${spring.application.name}")
+    private String appName;
     private final WebClient webClient;
 
     public StatsWebClient(WebClient.Builder webClientBuilder) {
@@ -23,6 +26,7 @@ public class StatsWebClient {
     }
 
     public EndpointHitDto addHit(EndpointHitDto endpointHitDto) {
+        endpointHitDto.setApp(appName);
         Mono<EndpointHitDto> endpointHitDtoMono = webClient.post()
                 .uri(serverUrl + "/hit")
                 .body(Mono.just(endpointHitDto), EndpointHitDto.class)

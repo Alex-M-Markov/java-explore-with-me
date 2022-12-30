@@ -2,7 +2,6 @@ package yandex.praktikum.ewmservice.services.privateuser;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,6 +22,7 @@ import yandex.praktikum.ewmservice.repositories.UsersRepository;
 import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -38,8 +38,6 @@ public class PrivateEventsService {
     private final RequestsRepository requestsRepository;
     private final StatsWebClient statsWebClient;
     private final PrivateRequestsService privateRequestsService;
-    @Value("${spring.application.name}")
-    private String appName;
     public static final long NEW_EVENT_NOT_EARLIER_LIMIT = 2L;
     public static final long NUMBER_OF_CONFIRMED_REQUESTS_IN_NEW_EVENT = 0L;
 
@@ -115,7 +113,6 @@ public class PrivateEventsService {
             throw new WrongUserException();
         }
         eventFound.setState(State.CANCELED);
-        eventsRepository.save(eventFound);
         return EventsMapper.eventToFullDto(eventFound, privateRequestsService.countConfirmedRequests(
                 eventFound.getId()));
     }
@@ -124,25 +121,24 @@ public class PrivateEventsService {
                                             HttpServletRequest httpServletRequest) {
         log.info("Получаем все события пользователя #{}", userId);
         statsWebClient.addHit(new EndpointHitDto(
-                appName,
+                null,
                 httpServletRequest.getRequestURI(),
                 httpServletRequest.getRemoteAddr(),
                 LocalDateTime.now()
         ));
         List<Event> events = eventsRepository.findEventsByInitiator_Id(userId, PageRequest.of(from, size));
         List<ParticipationRequest> allRequestsOfEvents = requestsRepository.findParticipationRequestsByEventIn(events);
+        Map<Event, Long> collect = allRequestsOfEvents.stream()
+                .collect(Collectors.groupingBy(ParticipationRequest::getEvent, Collectors.counting()));
         return events.stream()
-                .map((e) -> EventsMapper.eventToShortDto(e, allRequestsOfEvents
-                        .stream()
-                        .filter(p -> p.getEvent().equals(e))
-                        .count()))
+                .map(e -> EventsMapper.eventToShortDto(e, collect.get(e)))
                 .collect(Collectors.toList());
     }
 
     public EventFullDto getById(Long userId, Long eventId, HttpServletRequest httpServletRequest) {
         log.info("Получаем событие #{} пользователя #{}", eventId, userId);
         statsWebClient.addHit(new EndpointHitDto(
-                appName,
+                null,
                 httpServletRequest.getRequestURI(),
                 httpServletRequest.getRemoteAddr(),
                 LocalDateTime.now()

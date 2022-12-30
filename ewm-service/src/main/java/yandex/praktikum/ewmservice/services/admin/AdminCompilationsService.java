@@ -65,7 +65,6 @@ public class AdminCompilationsService {
         Event event = eventsRepository.findById(eventId)
                 .orElseThrow(() -> new EventNotFoundException(eventId));
         compilation.getEvents().remove(event);
-        compilationsRepository.save(compilation);
         log.info("Событие {} успешно удалено из подборки {}", eventId, compId);
     }
 
@@ -77,7 +76,6 @@ public class AdminCompilationsService {
         Event event = eventsRepository.findById(eventId)
                 .orElseThrow(() -> new EventNotFoundException(eventId));
         compilation.getEvents().add(event);
-        compilationsRepository.save(compilation);
         log.info("Событие {} успешно добавлено в подборку {}", eventId, compId);
     }
 
@@ -87,7 +85,6 @@ public class AdminCompilationsService {
         Compilation compilation = compilationsRepository.findById(compId)
                 .orElseThrow(() -> new CompilationNotFoundException(compId));
         compilation.setPinned(false);
-        compilationsRepository.save(compilation);
         log.info("Подборка {} успешно откреплена", compId);
     }
 
@@ -97,7 +94,6 @@ public class AdminCompilationsService {
         Compilation compilation = compilationsRepository.findById(compId)
                 .orElseThrow(() -> new CompilationNotFoundException(compId));
         compilation.setPinned(true);
-        compilationsRepository.save(compilation);
         log.info("Подборка {} успешно закреплена", compId);
     }
 }

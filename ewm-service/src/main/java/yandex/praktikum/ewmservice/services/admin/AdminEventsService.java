@@ -2,7 +2,6 @@ package yandex.praktikum.ewmservice.services.admin;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import yandex.praktikum.ewmservice.client.StatsWebClient;
@@ -36,8 +35,6 @@ public class AdminEventsService {
     private final RequestsRepository requestsRepository;
     private final StatsWebClient statsWebClient;
     private final PrivateRequestsService privateRequestsService;
-    @Value("${spring.application.name}")
-    private String appName;
 
     @Transactional
     public EventFullDto update(Long eventId, AdminUpdateEventRequest adminUpdateEventRequest) {
@@ -83,7 +80,7 @@ public class AdminEventsService {
                                    Integer from, Integer size, HttpServletRequest httpServletRequest) {
         log.info("Выгружаем события по запросу");
         statsWebClient.addHit(new EndpointHitDto(
-                appName,
+                null,
                 httpServletRequest.getRequestURI(),
                 httpServletRequest.getRemoteAddr(),
                 LocalDateTime.now()

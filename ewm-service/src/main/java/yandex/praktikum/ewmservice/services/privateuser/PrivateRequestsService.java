@@ -73,8 +73,7 @@ public class PrivateRequestsService {
         ParticipationRequest participationRequest = requestsRepository.findByIdAndRequester_Id(requestId, userId)
                 .orElseThrow(() -> new RequestNotFoundException(requestId));
         participationRequest.setStatus(ParticipationStatus.CANCELED);
-        requestsRepository.save(participationRequest);
-        return RequestMapper.requestToDto(participationRequest);
+                return RequestMapper.requestToDto(participationRequest);
     }
 
     public List<ParticipationRequestDto> getForUserEvent(Long userId, Long eventId) {
@@ -100,7 +99,6 @@ public class PrivateRequestsService {
                     ParticipationStatus.PENDING);
             for (ParticipationRequest request : requestsToCancel) {
                 request.setStatus(ParticipationStatus.CANCELED);
-                requestsRepository.save(request);
             }
         }
         participationRequest.setStatus(ParticipationStatus.CONFIRMED);

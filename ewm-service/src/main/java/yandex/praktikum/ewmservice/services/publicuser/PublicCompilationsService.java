@@ -33,9 +33,12 @@ public class PublicCompilationsService {
     public List<CompilationDto> get(Boolean pinned, Integer from, Integer size) {
         log.info("Получаем все подборки, начиная с #{}", from);
         List<Compilation> compilations = compilationsRepository.findAllByPinned(pinned, PageRequest.of(from, size));
+        List<List<Event>> allEventsList = compilations.stream()
+                .map(Compilation::getEvents)
+                .collect(Collectors.toList());
         List<Event> allEvents = new ArrayList<>();
-        for (Compilation c : compilations) {
-            allEvents.addAll(c.getEvents());
+        for (List<Event> events : allEventsList) {
+            allEvents.addAll(events);
         }
         List<ParticipationRequest> allRequestsOfEvents = requestsRepository.findParticipationRequestsByEventIn(
                 allEvents);
