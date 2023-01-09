@@ -26,7 +26,8 @@ public class Comment {
 
     @Column(name = "published_on", nullable = false)
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    private LocalDateTime published;
+    @Builder.Default
+    private LocalDateTime published = LocalDateTime.now();
 
     @ManyToOne(optional = false)
     @JoinColumn(name = "event_id", nullable = false)
