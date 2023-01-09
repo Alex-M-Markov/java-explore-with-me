@@ -8,4 +8,8 @@ public class WrongUserException extends RuntimeException {
     public WrongUserException() {
         super("Данное событие было опубликовано другим пользователем");
     }
+
+    public WrongUserException(String message) {
+        super(message);
+    }
 }

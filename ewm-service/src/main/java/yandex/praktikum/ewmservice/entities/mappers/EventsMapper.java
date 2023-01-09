@@ -7,6 +7,7 @@ import yandex.praktikum.ewmservice.entities.Event;
 import yandex.praktikum.ewmservice.entities.State;
 import yandex.praktikum.ewmservice.entities.User;
 import yandex.praktikum.ewmservice.entities.dto.event.EventFullDto;
+import yandex.praktikum.ewmservice.entities.dto.event.EventFullDtoWithComments;
 import yandex.praktikum.ewmservice.entities.dto.event.EventShortDto;
 import yandex.praktikum.ewmservice.entities.dto.event.NewEventDto;
 
@@ -35,17 +36,6 @@ public class EventsMapper {
                 ;
     }
 
-    public static Event fromShortDto(EventShortDto eventShortDto) {
-        return Event.builder()
-                .withTitle(eventShortDto.getTitle())
-                .withAnnotation(eventShortDto.getAnnotation())
-                .withEventDate(eventShortDto.getEventDate())
-                .withPaid(eventShortDto.getPaid())
-                .withState(State.PENDING)
-                .build()
-                ;
-    }
-
     public static EventFullDto eventToFullDto(Event event, Long confirmedRequests) {
         return new EventFullDto(
                 event.getId(),
@@ -63,6 +53,28 @@ public class EventsMapper {
                 event.getState(),
                 event.getCreatedOn(),
                 event.getPublishedOn(),
+                null
+        );
+    }
+
+    public static EventFullDtoWithComments eventToFullDtoWithComments(Event event, Long confirmedRequests) {
+        return new EventFullDtoWithComments(
+                event.getId(),
+                event.getTitle(),
+                event.getAnnotation(),
+                event.getDescription(),
+                CategoryMapper.categoryToDto(event.getCategory()),
+                event.getEventDate(),
+                LocationMapper.locationToDto(event.getLocation()),
+                event.getPaid(),
+                event.getParticipantLimit(),
+                confirmedRequests,
+                event.getRequestModeration(),
+                UserMapper.userToShortDto(event.getInitiator()),
+                event.getState(),
+                event.getCreatedOn(),
+                event.getPublishedOn(),
+                null,
                 null
         );
     }

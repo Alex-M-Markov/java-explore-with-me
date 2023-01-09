@@ -5,7 +5,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import yandex.praktikum.ewmservice.entities.SortOptions;
-import yandex.praktikum.ewmservice.entities.dto.event.EventFullDto;
+import yandex.praktikum.ewmservice.entities.dto.event.EventFullDtoWithComments;
 import yandex.praktikum.ewmservice.entities.dto.event.EventShortDto;
 import yandex.praktikum.ewmservice.services.publicuser.PublicEventsService;
 
@@ -41,9 +41,7 @@ public class PublicEventsController {
     }
 
     @GetMapping("/{id}")
-    public EventFullDto getByIdAndState(
-            @PathVariable Long id,
-            HttpServletRequest httpServletRequest) {
+    public EventFullDtoWithComments getByIdAndState(@PathVariable Long id, HttpServletRequest httpServletRequest) {
         return publicEventsService.getByIdAndState(id, httpServletRequest);
     }
 

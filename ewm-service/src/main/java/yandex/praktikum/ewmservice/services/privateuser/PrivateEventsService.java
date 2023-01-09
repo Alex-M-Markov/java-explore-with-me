@@ -7,19 +7,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import yandex.praktikum.ewmservice.client.StatsWebClient;
 import yandex.praktikum.ewmservice.entities.*;
-import yandex.praktikum.ewmservice.entities.dto.event.EventFullDto;
-import yandex.praktikum.ewmservice.entities.dto.event.EventShortDto;
-import yandex.praktikum.ewmservice.entities.dto.event.NewEventDto;
-import yandex.praktikum.ewmservice.entities.dto.event.UpdateEventRequest;
+import yandex.praktikum.ewmservice.entities.dto.event.*;
 import yandex.praktikum.ewmservice.entities.dto.statistics.EndpointHitDto;
 import yandex.praktikum.ewmservice.entities.dto.statistics.StatsRequestDto;
 import yandex.praktikum.ewmservice.entities.dto.statistics.ViewStatsDto;
+import yandex.praktikum.ewmservice.entities.mappers.CommentsMapper;
 import yandex.praktikum.ewmservice.entities.mappers.EventsMapper;
 import yandex.praktikum.ewmservice.exceptions.*;
-import yandex.praktikum.ewmservice.repositories.CategoriesRepository;
-import yandex.praktikum.ewmservice.repositories.EventsRepository;
-import yandex.praktikum.ewmservice.repositories.RequestsRepository;
-import yandex.praktikum.ewmservice.repositories.UsersRepository;
+import yandex.praktikum.ewmservice.repositories.*;
 
 import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
@@ -36,6 +31,7 @@ public class PrivateEventsService {
     private final UsersRepository usersRepository;
     private final CategoriesRepository categoriesRepository;
     private final RequestsRepository requestsRepository;
+    private final CommentsRepository commentsRepository;
     private final StatsWebClient statsWebClient;
     private final PrivateRequestsService privateRequestsService;
     public static final long NEW_EVENT_NOT_EARLIER_LIMIT = 2L;
@@ -158,7 +154,7 @@ public class PrivateEventsService {
         return eventShortDtos;
     }
 
-    public EventFullDto getById(Long userId, Long eventId, HttpServletRequest httpServletRequest) {
+    public EventFullDtoWithComments getById(Long userId, Long eventId, HttpServletRequest httpServletRequest) {
         log.info("Получаем событие #{} пользователя #{}", eventId, userId);
         statsWebClient.addHit(new EndpointHitDto(
                 null,
@@ -170,17 +166,20 @@ public class PrivateEventsService {
         if (!Objects.equals(event.getInitiator().getId(), userId)) {
             throw new WrongUserException();
         }
-        EventFullDto eventFullDto = EventsMapper.eventToFullDto(event, privateRequestsService.countConfirmedRequests(
+        EventFullDtoWithComments eventFullDtoWithComments = EventsMapper.eventToFullDtoWithComments(event, privateRequestsService.countConfirmedRequests(
                 event.getId()));
         ArrayList<String> uris = new ArrayList<>(List.of("/events/" + eventId));
         StatsRequestDto statsRequestDto = StatsRequestDto.builder()
-                .withStart(eventFullDto.getPublishedOn())
+                .withStart(eventFullDtoWithComments.getPublishedOn())
                 .withEnd(LocalDateTime.now())
                 .withUris(uris)
                 .withUnique(false)
                 .build();
-        eventFullDto.setViews((long) statsWebClient.getViews(statsRequestDto).size());
-        return eventFullDto;
+        eventFullDtoWithComments.setViews((long) statsWebClient.getViews(statsRequestDto).size());
+        eventFullDtoWithComments.setComments(commentsRepository.findAllByEvent(event).stream()
+                .map(CommentsMapper::toCommentDto)
+                .collect(Collectors.toList()));
+        return eventFullDtoWithComments;
     }
 
 }
