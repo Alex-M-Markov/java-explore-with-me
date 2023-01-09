@@ -4,9 +4,9 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import yandex.praktikum.ewmservice.entities.Comment;
 import yandex.praktikum.ewmservice.entities.State;
 import yandex.praktikum.ewmservice.entities.dto.category.CategoryDto;
+import yandex.praktikum.ewmservice.entities.dto.comment.CommentDto;
 import yandex.praktikum.ewmservice.entities.dto.location.LocationDto;
 import yandex.praktikum.ewmservice.entities.dto.user.UserShortDto;
 
@@ -37,5 +37,5 @@ public class EventFullDtoWithComments {
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime publishedOn;
     private Long views;
-    private List<Comment> comments;
+    private List<CommentDto> comments;
 }

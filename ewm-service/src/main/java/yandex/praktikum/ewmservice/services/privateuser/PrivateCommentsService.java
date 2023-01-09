@@ -64,7 +64,7 @@ public class PrivateCommentsService {
         if (userId != comment.getUser().getId()) {
             throw new WrongUserException("Можно удалять только свои комментарии");
         }
-        commentsRepository.delete(comment);
+        commentsRepository.deleteById(commentId);
         log.info("Комментарий к событию {} успешно удален", eventId);
     }
 

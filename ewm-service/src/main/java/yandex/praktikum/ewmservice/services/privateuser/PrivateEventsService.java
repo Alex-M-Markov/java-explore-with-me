@@ -11,6 +11,7 @@ import yandex.praktikum.ewmservice.entities.dto.event.*;
 import yandex.praktikum.ewmservice.entities.dto.statistics.EndpointHitDto;
 import yandex.praktikum.ewmservice.entities.dto.statistics.StatsRequestDto;
 import yandex.praktikum.ewmservice.entities.dto.statistics.ViewStatsDto;
+import yandex.praktikum.ewmservice.entities.mappers.CommentsMapper;
 import yandex.praktikum.ewmservice.entities.mappers.EventsMapper;
 import yandex.praktikum.ewmservice.exceptions.*;
 import yandex.praktikum.ewmservice.repositories.*;
@@ -175,7 +176,9 @@ public class PrivateEventsService {
                 .withUnique(false)
                 .build();
         eventFullDtoWithComments.setViews((long) statsWebClient.getViews(statsRequestDto).size());
-        eventFullDtoWithComments.setComments(commentsRepository.findAllByEvent(event));
+        eventFullDtoWithComments.setComments(commentsRepository.findAllByEvent(event).stream()
+                .map(CommentsMapper::toCommentDto)
+                .collect(Collectors.toList()));
         return eventFullDtoWithComments;
     }
 

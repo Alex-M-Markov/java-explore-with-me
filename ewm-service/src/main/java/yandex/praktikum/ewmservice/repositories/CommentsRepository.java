@@ -10,4 +10,10 @@ public interface CommentsRepository extends CrudRepository<Comment, Long> {
 
     List<Comment> findAllByEvent(Event event);
 
+    void deleteAllByUserId(long userId);
+
+    List<Comment> getCommentsByUserId(long userId);
+
+    List<Comment> getCommentsByTextContainingIgnoreCase(String text);
+
 }
