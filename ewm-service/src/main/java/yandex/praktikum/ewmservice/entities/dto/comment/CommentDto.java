@@ -25,7 +25,6 @@ public class CommentDto {
     @NotBlank
     private Long user;
     @NotNull
-    @Builder.Default
-    private boolean edited = false;
+    private boolean edited;
 
 }

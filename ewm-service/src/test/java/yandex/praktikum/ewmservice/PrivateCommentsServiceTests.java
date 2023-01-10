@@ -3,57 +3,72 @@ package yandex.praktikum.ewmservice;
 import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
 import yandex.praktikum.ewmservice.entities.dto.comment.CommentDto;
+import yandex.praktikum.ewmservice.entities.dto.comment.NewCommentDto;
+import yandex.praktikum.ewmservice.entities.mappers.CommentsMapper;
+import yandex.praktikum.ewmservice.exceptions.CommentNotFoundException;
 import yandex.praktikum.ewmservice.repositories.CommentsRepository;
 import yandex.praktikum.ewmservice.services.privateuser.PrivateCommentsService;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 @SpringBootTest
-@AutoConfigureTestDatabase
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 public class PrivateCommentsServiceTests {
 
     private final PrivateCommentsService privateCommentsService;
     private final CommentsRepository commentsRepository;
-    private CommentDto commentDto1;
-    private CommentDto commentDto2;
-    private CommentDto commentDto3;
+    private NewCommentDto newCommentDto1;
+    private NewCommentDto newCommentDto2;
+    private NewCommentDto newCommentDto3;
 
     @BeforeEach
     void initialize() {
-        commentDto1 = CommentDto.builder()
-                .withUser(1L)
-                .withEvent(10L)
+        newCommentDto1 = NewCommentDto.builder()
                 .withText("It was stunning :-)")
                 .build();
-        commentDto2 = CommentDto.builder()
-                .withUser(5L)
-                .withEvent(6L)
+        newCommentDto2 = NewCommentDto.builder()
                 .withText("I've been waiting so long to hear his voice!")
                 .build();
-        commentDto3 = CommentDto.builder()
-                .withUser(10L)
-                .withEvent(1L)
+        newCommentDto3 = NewCommentDto.builder()
                 .withText("Boooring...")
                 .build();
     }
 
     @AfterEach
     void clear() {
-        commentDto1 = null;
-        commentDto2 = null;
-        commentDto3 = null;
+        newCommentDto1 = null;
+        newCommentDto2 = null;
+        newCommentDto3 = null;
     }
 
-/*
     @Test
     public void create() {
-        privateCommentsService.create(commentDto1);
-        assertThat(commentsRepository.getFilmById(4L).getName()).isEqualTo("The Godfather");
+        Long commentId = privateCommentsService.create(1L, 3L, newCommentDto1).getId();
+        CommentDto commentDtoReturned = CommentsMapper.toCommentDto(commentsRepository.findById(commentId).orElseThrow(()
+                -> new CommentNotFoundException(commentId)));
+        assertThat(commentDtoReturned.getText()).isEqualTo(newCommentDto1.getText());
+        assertThat(commentDtoReturned.getText()).isNotEqualTo("foo");
+        assertThat(commentDtoReturned.getUser()).isEqualTo(1L);
+        assertThat(commentDtoReturned.getEvent()).isEqualTo(3L);
     }
-*/
+
+    @Test
+    public void update() {
+        Long commentId = privateCommentsService.create(10L, 1L, newCommentDto2).getId();
+        CommentDto commentDtoReturned = CommentsMapper.toCommentDto(commentsRepository.findById(commentId).orElseThrow(()
+                -> new CommentNotFoundException(commentId)));
+        String newText = "Sorry, posted by mistake";
+        commentDtoReturned.setText(newText);
+        privateCommentsService.update(10L, 1L, commentDtoReturned);
+        CommentDto commentDtoReturnedUpdated = CommentsMapper.toCommentDto(commentsRepository.findById(commentId).orElseThrow(()
+                -> new CommentNotFoundException(commentId)));
+        assertThat(commentDtoReturnedUpdated.getText()).isEqualTo(newText);
+        assertThat(commentDtoReturnedUpdated.isEdited()).isTrue();
+    }
 
 
 }
