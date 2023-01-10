@@ -7,6 +7,7 @@ import org.springframework.transaction.annotation.Transactional;
 import yandex.praktikum.ewmservice.entities.Comment;
 import yandex.praktikum.ewmservice.entities.Event;
 import yandex.praktikum.ewmservice.entities.dto.comment.CommentDto;
+import yandex.praktikum.ewmservice.entities.dto.comment.NewCommentDto;
 import yandex.praktikum.ewmservice.entities.mappers.CommentsMapper;
 import yandex.praktikum.ewmservice.exceptions.CommentNotFoundException;
 import yandex.praktikum.ewmservice.exceptions.EventNotFoundException;
@@ -27,13 +28,13 @@ public class PrivateCommentsService {
     private final CommentsRepository commentsRepository;
 
     @Transactional
-    public CommentDto create(long userId, long eventId, CommentDto commentDto) {
+    public CommentDto create(long userId, long eventId, NewCommentDto newCommentDto) {
         log.info("Публикуется комментарий к событию {}", eventId);
         Event event = eventsRepository.findById(eventId).orElseThrow(() -> new EventNotFoundException(eventId));
         if (event.getInitiator().getId().equals(userId)) {
             throw new WrongUserException("Нельзя оставлять комментарии на свои события");
         }
-        Comment comment = CommentsMapper.fromCommentDto(commentDto,
+        Comment comment = CommentsMapper.fromNewCommentDto(newCommentDto,
                 usersRepository.findById(userId).orElseThrow(() -> new UserNotFoundException(userId)), event);
         CommentDto commentDtoReturn = CommentsMapper.toCommentDto(commentsRepository.save(comment));
         log.info("Комментарий к событию {} успешно создан", eventId);
@@ -41,13 +42,13 @@ public class PrivateCommentsService {
     }
 
     @Transactional
-    public CommentDto update(long userId, long eventId, long commentId, CommentDto commentDto) {
+    public CommentDto update(long userId, long eventId, CommentDto commentDto) {
         if (userId != commentDto.getUser()) {
             throw new WrongUserException("Можно изменять только свои комментарии");
         }
         log.info("Обновляется комментарий к событию {}", eventId);
-        Comment comment = commentsRepository.findById(commentId)
-                .orElseThrow(() -> new CommentNotFoundException(commentId));
+        Comment comment = commentsRepository.findById(commentDto.getId())
+                .orElseThrow(() -> new CommentNotFoundException(commentDto.getId()));
         comment.setText(commentDto.getText());
         if (!comment.isEdited()) {
             comment.setEdited(true);

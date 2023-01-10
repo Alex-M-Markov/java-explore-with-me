@@ -6,21 +6,22 @@ import yandex.praktikum.ewmservice.entities.Comment;
 import yandex.praktikum.ewmservice.entities.Event;
 import yandex.praktikum.ewmservice.entities.User;
 import yandex.praktikum.ewmservice.entities.dto.comment.CommentDto;
+import yandex.praktikum.ewmservice.entities.dto.comment.NewCommentDto;
 
 @UtilityClass
 public class CommentsMapper {
 
-    public static Comment fromCommentDto(CommentDto commentDto, User user, Event event) {
+    public static Comment fromNewCommentDto(NewCommentDto newCommentDto, User user, Event event) {
         return Comment.builder()
-                .withText(commentDto.getText())
+                .withText(newCommentDto.getText())
                 .withUser(user)
                 .withEvent(event)
-                .withEdited(commentDto.isEdited())
                 .build();
     }
 
     public static CommentDto toCommentDto(Comment comment) {
         return CommentDto.builder()
+                .withId(comment.getId())
                 .withText(comment.getText())
                 .withUser(comment.getUser().getId())
                 .withEvent(comment.getEvent().getId())
