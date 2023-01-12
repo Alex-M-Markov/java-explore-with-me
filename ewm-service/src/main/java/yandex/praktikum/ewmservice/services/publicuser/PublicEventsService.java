@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import yandex.praktikum.ewmservice.client.StatsWebClient;
+import yandex.praktikum.ewmservice.entities.Comment;
 import yandex.praktikum.ewmservice.entities.Event;
 import yandex.praktikum.ewmservice.entities.ParticipationRequest;
 import yandex.praktikum.ewmservice.entities.SortOptions;
@@ -107,7 +108,8 @@ public class PublicEventsService {
                 .withUnique(false)
                 .build();
         eventFullDtoWithComments.setViews((long) statsWebClient.getViews(statsRequestDto).size());
-        eventFullDtoWithComments.setComments(commentsRepository.findAllByEvent(event).stream()
+        List<Comment> comments = commentsRepository.findAllByEvent(event);
+        eventFullDtoWithComments.setComments(comments.stream()
                 .map(CommentsMapper::toCommentDto)
                 .collect(Collectors.toList()));
         return eventFullDtoWithComments;

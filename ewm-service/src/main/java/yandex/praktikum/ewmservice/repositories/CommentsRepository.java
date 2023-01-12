@@ -1,5 +1,6 @@
 package yandex.praktikum.ewmservice.repositories;
 
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.repository.CrudRepository;
 import yandex.praktikum.ewmservice.entities.Comment;
 import yandex.praktikum.ewmservice.entities.Event;
@@ -12,8 +13,8 @@ public interface CommentsRepository extends CrudRepository<Comment, Long> {
 
     void deleteAllByUserId(long userId);
 
-    List<Comment> getCommentsByUserId(long userId);
+    List<Comment> getCommentsByUserId(long userId, Pageable pageable);
 
-    List<Comment> getCommentsByTextContainingIgnoreCase(String text);
+    List<Comment> getCommentsByTextContainingIgnoreCase(String text, Pageable pageable);
 
 }

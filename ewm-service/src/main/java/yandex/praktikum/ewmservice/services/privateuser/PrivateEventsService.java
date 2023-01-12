@@ -6,19 +6,41 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import yandex.praktikum.ewmservice.client.StatsWebClient;
-import yandex.praktikum.ewmservice.entities.*;
-import yandex.praktikum.ewmservice.entities.dto.event.*;
+import yandex.praktikum.ewmservice.entities.Category;
+import yandex.praktikum.ewmservice.entities.Comment;
+import yandex.praktikum.ewmservice.entities.Event;
+import yandex.praktikum.ewmservice.entities.ParticipationRequest;
+import yandex.praktikum.ewmservice.entities.State;
+import yandex.praktikum.ewmservice.entities.User;
+import yandex.praktikum.ewmservice.entities.dto.event.EventFullDto;
+import yandex.praktikum.ewmservice.entities.dto.event.EventFullDtoWithComments;
+import yandex.praktikum.ewmservice.entities.dto.event.EventShortDto;
+import yandex.praktikum.ewmservice.entities.dto.event.NewEventDto;
+import yandex.praktikum.ewmservice.entities.dto.event.UpdateEventRequest;
 import yandex.praktikum.ewmservice.entities.dto.statistics.EndpointHitDto;
 import yandex.praktikum.ewmservice.entities.dto.statistics.StatsRequestDto;
 import yandex.praktikum.ewmservice.entities.dto.statistics.ViewStatsDto;
 import yandex.praktikum.ewmservice.entities.mappers.CommentsMapper;
 import yandex.praktikum.ewmservice.entities.mappers.EventsMapper;
-import yandex.praktikum.ewmservice.exceptions.*;
-import yandex.praktikum.ewmservice.repositories.*;
+import yandex.praktikum.ewmservice.exceptions.CategoryNotFoundException;
+import yandex.praktikum.ewmservice.exceptions.EventNotFoundException;
+import yandex.praktikum.ewmservice.exceptions.TooEarlyEventException;
+import yandex.praktikum.ewmservice.exceptions.TooLateToChangeException;
+import yandex.praktikum.ewmservice.exceptions.UserNotFoundException;
+import yandex.praktikum.ewmservice.exceptions.WrongUserException;
+import yandex.praktikum.ewmservice.repositories.CategoriesRepository;
+import yandex.praktikum.ewmservice.repositories.CommentsRepository;
+import yandex.praktikum.ewmservice.repositories.EventsRepository;
+import yandex.praktikum.ewmservice.repositories.RequestsRepository;
+import yandex.praktikum.ewmservice.repositories.UsersRepository;
 
 import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
@@ -176,7 +198,8 @@ public class PrivateEventsService {
                 .withUnique(false)
                 .build();
         eventFullDtoWithComments.setViews((long) statsWebClient.getViews(statsRequestDto).size());
-        eventFullDtoWithComments.setComments(commentsRepository.findAllByEvent(event).stream()
+        List<Comment> comments = commentsRepository.findAllByEvent(event);
+        eventFullDtoWithComments.setComments(comments.stream()
                 .map(CommentsMapper::toCommentDto)
                 .collect(Collectors.toList()));
         return eventFullDtoWithComments;

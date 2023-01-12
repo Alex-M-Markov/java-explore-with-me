@@ -17,8 +17,9 @@ import yandex.praktikum.ewmservice.repositories.CommentsRepository;
 import yandex.praktikum.ewmservice.repositories.EventsRepository;
 import yandex.praktikum.ewmservice.repositories.UsersRepository;
 
+import java.util.Objects;
+
 @Service
-@Transactional(readOnly = true)
 @RequiredArgsConstructor
 @Slf4j
 public class PrivateCommentsService {
@@ -28,7 +29,7 @@ public class PrivateCommentsService {
     private final CommentsRepository commentsRepository;
 
     @Transactional
-    public CommentDto create(long userId, long eventId, NewCommentDto newCommentDto) {
+    public CommentDto create(Long userId, Long eventId, NewCommentDto newCommentDto) {
         log.info("Публикуется комментарий к событию {}", eventId);
         Event event = eventsRepository.findById(eventId).orElseThrow(() -> new EventNotFoundException(eventId));
         if (event.getInitiator().getId().equals(userId)) {
@@ -42,8 +43,8 @@ public class PrivateCommentsService {
     }
 
     @Transactional
-    public CommentDto update(long userId, long eventId, CommentDto commentDto) {
-        if (userId != commentDto.getUser()) {
+    public CommentDto update(Long userId, Long eventId, CommentDto commentDto) {
+        if (!Objects.equals(userId, commentDto.getUser())) {
             throw new WrongUserException("Можно изменять только свои комментарии");
         }
         log.info("Обновляется комментарий к событию {}", eventId);
@@ -58,11 +59,11 @@ public class PrivateCommentsService {
     }
 
     @Transactional
-    public void delete(long userId, long eventId, long commentId) {
+    public void delete(Long userId, Long eventId, Long commentId) {
         log.info("Удаляется комментарий к событию {}", eventId);
         Comment comment = commentsRepository.findById(commentId)
                 .orElseThrow(() -> new CommentNotFoundException(commentId));
-        if (userId != comment.getUser().getId()) {
+        if (!Objects.equals(userId, comment.getUser().getId())) {
             throw new WrongUserException("Можно удалять только свои комментарии");
         }
         commentsRepository.deleteById(commentId);
