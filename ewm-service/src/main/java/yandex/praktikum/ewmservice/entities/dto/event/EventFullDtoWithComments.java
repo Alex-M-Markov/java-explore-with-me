@@ -1,9 +1,8 @@
 package yandex.praktikum.ewmservice.entities.dto.event;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 import yandex.praktikum.ewmservice.entities.State;
 import yandex.praktikum.ewmservice.entities.dto.category.CategoryDto;
 import yandex.praktikum.ewmservice.entities.dto.comment.CommentDto;
@@ -14,8 +13,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
-@AllArgsConstructor
-@NoArgsConstructor
+@Builder (setterPrefix = "with")
 public class EventFullDtoWithComments {
 
     private Long id;

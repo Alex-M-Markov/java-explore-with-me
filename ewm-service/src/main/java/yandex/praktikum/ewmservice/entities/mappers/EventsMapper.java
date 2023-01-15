@@ -58,25 +58,23 @@ public class EventsMapper {
     }
 
     public static EventFullDtoWithComments eventToFullDtoWithComments(Event event, Long confirmedRequests) {
-        return new EventFullDtoWithComments(
-                event.getId(),
-                event.getTitle(),
-                event.getAnnotation(),
-                event.getDescription(),
-                CategoryMapper.categoryToDto(event.getCategory()),
-                event.getEventDate(),
-                LocationMapper.locationToDto(event.getLocation()),
-                event.getPaid(),
-                event.getParticipantLimit(),
-                confirmedRequests,
-                event.getRequestModeration(),
-                UserMapper.userToShortDto(event.getInitiator()),
-                event.getState(),
-                event.getCreatedOn(),
-                event.getPublishedOn(),
-                null,
-                null
-        );
+        return EventFullDtoWithComments.builder()
+                .withId(event.getId())
+                .withTitle(event.getTitle())
+                .withAnnotation(event.getAnnotation())
+                .withDescription(event.getDescription())
+                .withCategory(CategoryMapper.categoryToDto(event.getCategory()))
+                .withEventDate(event.getEventDate())
+                .withLocation(LocationMapper.locationToDto(event.getLocation()))
+                .withPaid(event.getPaid())
+                .withParticipantLimit(event.getParticipantLimit())
+                .withConfirmedRequests(confirmedRequests)
+                .withRequestModeration(event.getRequestModeration())
+                .withInitiator(UserMapper.userToShortDto(event.getInitiator()))
+                .withState(event.getState())
+                .withCreatedOn(event.getCreatedOn())
+                .withPublishedOn(event.getPublishedOn())
+                .build();
     }
 
     public static EventShortDto eventToShortDto(Event event, Long confirmedRequests) {

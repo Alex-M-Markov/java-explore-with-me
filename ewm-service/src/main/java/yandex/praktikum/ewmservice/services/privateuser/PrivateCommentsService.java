@@ -22,13 +22,13 @@ import java.util.Objects;
 @Service
 @RequiredArgsConstructor
 @Slf4j
+@Transactional
 public class PrivateCommentsService {
 
     private final EventsRepository eventsRepository;
     private final UsersRepository usersRepository;
     private final CommentsRepository commentsRepository;
 
-    @Transactional
     public CommentDto create(Long userId, Long eventId, NewCommentDto newCommentDto) {
         log.info("Публикуется комментарий к событию {}", eventId);
         Event event = eventsRepository.findById(eventId).orElseThrow(() -> new EventNotFoundException(eventId));
@@ -42,7 +42,6 @@ public class PrivateCommentsService {
         return commentDtoReturn;
     }
 
-    @Transactional
     public CommentDto update(Long userId, Long eventId, CommentDto commentDto) {
         if (!Objects.equals(userId, commentDto.getUser())) {
             throw new WrongUserException("Можно изменять только свои комментарии");
@@ -58,7 +57,6 @@ public class PrivateCommentsService {
         return CommentsMapper.toCommentDto(comment);
     }
 
-    @Transactional
     public void delete(Long userId, Long eventId, Long commentId) {
         log.info("Удаляется комментарий к событию {}", eventId);
         Comment comment = commentsRepository.findById(commentId)

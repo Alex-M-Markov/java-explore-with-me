@@ -17,11 +17,11 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @Slf4j
+@Transactional
 public class AdminCommentsService {
 
     private final CommentsRepository commentsRepository;
 
-    @Transactional
     public List<CommentDto> getAllOfUser(Long userId, int from, int size) {
         log.info("Получаем все комментарии пользователя {}", userId);
         List<Comment> comments = commentsRepository.getCommentsByUserId(userId, PageRequest.of(from, size));
@@ -31,7 +31,6 @@ public class AdminCommentsService {
                 .collect(Collectors.toList());
     }
 
-    @Transactional
     public List<CommentDto> findByText(String text, int from, int size) {
         log.info("Получаем все комментарии, содержащие {}", text);
         List<Comment> comments = commentsRepository.getCommentsByTextContainingIgnoreCase(text,
@@ -42,7 +41,6 @@ public class AdminCommentsService {
                 .collect(Collectors.toList());
     }
 
-    @Transactional
     public void delete(Long commentId) {
         log.info("Удаляется комментарий {}", commentId);
         commentsRepository.findById(commentId).orElseThrow(() -> new CommentNotFoundException(commentId));
@@ -50,7 +48,6 @@ public class AdminCommentsService {
         log.info("Комментарий {} успешно удален", commentId);
     }
 
-    @Transactional
     public void deleteAllOfUser(Long userId) {
         log.info("Удаляются все комментарии пользователя {}", userId);
         commentsRepository.deleteAllByUserId(userId);
