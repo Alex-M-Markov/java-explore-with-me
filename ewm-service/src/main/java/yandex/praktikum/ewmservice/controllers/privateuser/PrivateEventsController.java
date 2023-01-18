@@ -3,10 +3,7 @@ package yandex.praktikum.ewmservice.controllers.privateuser;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import yandex.praktikum.ewmservice.entities.dto.event.EventFullDto;
-import yandex.praktikum.ewmservice.entities.dto.event.EventShortDto;
-import yandex.praktikum.ewmservice.entities.dto.event.NewEventDto;
-import yandex.praktikum.ewmservice.entities.dto.event.UpdateEventRequest;
+import yandex.praktikum.ewmservice.entities.dto.event.*;
 import yandex.praktikum.ewmservice.services.privateuser.PrivateEventsService;
 
 import javax.servlet.http.HttpServletRequest;
@@ -47,7 +44,7 @@ public class PrivateEventsController {
     }
 
     @GetMapping("/{userId}/events/{eventId}")
-    public EventFullDto getById(
+    public EventFullDtoWithComments getById(
             @PathVariable long userId,
             @PathVariable long eventId,
             HttpServletRequest httpServletRequest) {

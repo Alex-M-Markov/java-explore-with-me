@@ -6,17 +6,20 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import yandex.praktikum.ewmservice.client.StatsWebClient;
+import yandex.praktikum.ewmservice.entities.Comment;
 import yandex.praktikum.ewmservice.entities.Event;
 import yandex.praktikum.ewmservice.entities.ParticipationRequest;
 import yandex.praktikum.ewmservice.entities.SortOptions;
 import yandex.praktikum.ewmservice.entities.State;
-import yandex.praktikum.ewmservice.entities.dto.event.EventFullDto;
+import yandex.praktikum.ewmservice.entities.dto.event.EventFullDtoWithComments;
 import yandex.praktikum.ewmservice.entities.dto.event.EventShortDto;
 import yandex.praktikum.ewmservice.entities.dto.statistics.EndpointHitDto;
 import yandex.praktikum.ewmservice.entities.dto.statistics.StatsRequestDto;
 import yandex.praktikum.ewmservice.entities.dto.statistics.ViewStatsDto;
+import yandex.praktikum.ewmservice.entities.mappers.CommentsMapper;
 import yandex.praktikum.ewmservice.entities.mappers.EventsMapper;
 import yandex.praktikum.ewmservice.exceptions.EventNotFoundException;
+import yandex.praktikum.ewmservice.repositories.CommentsRepository;
 import yandex.praktikum.ewmservice.repositories.EventsRepository;
 import yandex.praktikum.ewmservice.repositories.RequestsRepository;
 import yandex.praktikum.ewmservice.services.privateuser.PrivateRequestsService;
@@ -38,6 +41,7 @@ public class PublicEventsService {
 
     private final EventsRepository eventsRepository;
     private final RequestsRepository requestsRepository;
+    private final CommentsRepository commentsRepository;
     private final StatsWebClient statsWebClient;
     private final PrivateRequestsService privateRequestsService;
 
@@ -84,7 +88,7 @@ public class PublicEventsService {
         return eventShortDtos;
     }
 
-    public EventFullDto getByIdAndState(Long eventId, HttpServletRequest httpServletRequest) {
+    public EventFullDtoWithComments getByIdAndState(Long eventId, HttpServletRequest httpServletRequest) {
         log.info("Получаем событие #{}", eventId);
         statsWebClient.addHit(new EndpointHitDto(
                 null,
@@ -94,17 +98,21 @@ public class PublicEventsService {
         ));
         Event event = eventsRepository.findByIdAndState(eventId, State.PUBLISHED)
                 .orElseThrow(() -> new EventNotFoundException(eventId));
-        EventFullDto eventFullDto = EventsMapper.eventToFullDto(event, privateRequestsService.countConfirmedRequests(
-                eventId));
+        EventFullDtoWithComments eventFullDtoWithComments = EventsMapper.eventToFullDtoWithComments(event,
+                privateRequestsService.countConfirmedRequests(eventId));
         ArrayList<String> uris = new ArrayList<>(List.of("/events/" + eventId));
         StatsRequestDto statsRequestDto = StatsRequestDto.builder()
-                .withStart(eventFullDto.getPublishedOn())
+                .withStart(eventFullDtoWithComments.getPublishedOn())
                 .withEnd(LocalDateTime.now())
                 .withUris(uris)
                 .withUnique(false)
                 .build();
-        eventFullDto.setViews((long) statsWebClient.getViews(statsRequestDto).size());
-        return eventFullDto;
+        eventFullDtoWithComments.setViews((long) statsWebClient.getViews(statsRequestDto).size());
+        List<Comment> comments = commentsRepository.findAllByEvent(event);
+        eventFullDtoWithComments.setComments(comments.stream()
+                .map(CommentsMapper::toCommentDto)
+                .collect(Collectors.toList()));
+        return eventFullDtoWithComments;
     }
 
 }
